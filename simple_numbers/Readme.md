@@ -60,3 +60,13 @@ time ./exe.kexe
 Target 10m: 29.96s (x130)  
 
 I am not sure what is going on here...
+
+### Swift
+```
+swiftc -O main.swift
+time ./main
+```
+Target 10m: ./main  0.26s user 0.01s system 10% cpu 2.544 total (x11)
+Target 100m: ./main  4.51s user 0.06s system 86% cpu 5.253 total  (+15%)
+Target 1b: ./main  98.19s user 0.75s system 98% cpu 1:40.67 total (100.67 sec, +2.3%)  
+Looks like there is a slight startup delay for swift executables, but other than that, the perf is on par with c++/rust/go.
