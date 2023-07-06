@@ -1,0 +1,18 @@
+syntax = "proto3";
+package serde;
+
+option go_package = "protobufs/serde";
+
+message Features {
+    string Name = 1;
+    double Value = 2;
+}
+
+message PostData {
+    string Id = 1;
+    repeated Features Features = 2;
+}
+
+message Data {
+    repeated PostData PostData = 1;
+}
