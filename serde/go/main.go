@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"time"
@@ -22,6 +24,55 @@ func genRandomString(size int) string {
 		result += string('a' + rand.Intn(26))
 	}
 	return result
+}
+
+func serializeString(buf *[]byte, s string) {
+	*buf = binary.BigEndian.AppendUint32(*buf, uint32(len(s)))
+	for i := 0; i < len(s); i += 1 {
+		*buf = append(*buf, s[i])
+	}
+}
+
+func serializeBinary(data Data) []byte {
+	buf := make([]byte, 0, 42285088)
+	buf = binary.BigEndian.AppendUint32(buf, uint32(len(data.Features)))
+	for postId, features := range data.Features {
+		serializeString(&buf, postId)
+		buf = binary.BigEndian.AppendUint32(buf, uint32(len(features)))
+		for featureName, value := range features {
+			serializeString(&buf, featureName)
+			buf = binary.BigEndian.AppendUint64(buf, math.Float64bits(value))
+		}
+	}
+	return buf
+}
+
+func deserializeBinary(buf []byte) Data {
+	data := Data{}
+	data.Features = make(map[string]map[string]float64)
+	offset := 0
+	featuresLen := int(binary.BigEndian.Uint32(buf[offset:]))
+	offset += 4
+	for i := 0; i < featuresLen; i += 1 {
+		postIdLen := int(binary.BigEndian.Uint32(buf[offset:]))
+		offset += 4
+		postId := string(buf[offset : offset+postIdLen])
+		offset += postIdLen
+		features := make(map[string]float64)
+		data.Features[postId] = features
+		featuresLen := int(binary.BigEndian.Uint32(buf[offset:]))
+		offset += 4
+		for j := 0; j < featuresLen; j += 1 {
+			featureNameLen := int(binary.BigEndian.Uint32(buf[offset:]))
+			offset += 4
+			featureName := string(buf[offset : offset+featureNameLen])
+			offset += featureNameLen
+			value := math.Float64frombits(binary.BigEndian.Uint64(buf[offset:]))
+			offset += 8
+			features[featureName] = value
+		}
+	}
+	return data
 }
 
 func main() {
@@ -106,5 +157,30 @@ func main() {
 		}
 		elapsed = time.Since(start)
 		fmt.Printf("Proto deserialization elapsed: %v\n", elapsed)
+	} else if mode == "binary" {
+		bytes, err := os.ReadFile("data.json")
+		if err != nil {
+			panic(err)
+		}
+		var data Data
+		err = json.Unmarshal(bytes, &data)
+		if err != nil {
+			panic(err)
+		}
+		start := time.Now()
+		bytes = serializeBinary(data)
+		elapsed := time.Since(start)
+		fmt.Printf("Binary serialization elapsed: %v\n", elapsed)
+		fmt.Printf("Binary serialization bytes size: %v\n", len(bytes))
+		start = time.Now()
+		data2 := deserializeBinary(bytes)
+		elapsed = time.Since(start)
+		fmt.Printf("Binary deserialization elapsed: %v\n", elapsed)
+		fmt.Printf("Binary deserialized post len: %v\n", len(data2.Features))
+		js, err := json.Marshal(data2)
+		if err != nil {
+			panic(err)
+		}
+		os.WriteFile("data2.json", js, 0644)
 	}
 }

@@ -14,6 +14,12 @@ Proto serialization elapsed: 90.714875ms
 bytes2 size: 33016000
 Proto deserialization elapsed: 90.268292ms
 
+### binary
+Binary serialization elapsed: 57.26525ms
+Binary serialization bytes size: 32018004
+Binary deserialization elapsed: 81.769542ms
+Binary deserialized post len: 1000
+
 ## Rust
 ### Json
 deserialized in 119.270125ms
@@ -22,7 +28,7 @@ serialized in 62.775ms
 serialized len: 42233787
 
 ### Proto
-proto serialized in 37.32125ms
+proto serialized in 47.911208ms
 proto serialized len: 33004000
-proto deserialized in 54.040417ms
+proto deserialized in 52.436417ms
 proto post data len: 1000

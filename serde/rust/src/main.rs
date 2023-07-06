@@ -29,6 +29,7 @@ fn main() {
     println!("json serialized len: {}", serialized.len());
 
     // construct proto
+    let start = std::time::Instant::now();
     let mut out = Data::new();
     for (key, value) in deserialized.features {
         let mut postData = PostData::new();
@@ -40,7 +41,6 @@ fn main() {
         }
         out.PostData.push(postData);
     }
-    let start = std::time::Instant::now();
     let serialized = out.write_to_bytes().unwrap();
     println!("proto serialized in {:?}", start.elapsed());
     println!("proto serialized len: {}", serialized.len());
